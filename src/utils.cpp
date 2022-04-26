@@ -108,6 +108,7 @@ bool readFile(const std::string& filename, std::string& content)
 
 bool checkGLErrors()
 {
+#ifdef USE_OPENGL
 	#ifdef _DEBUG
 	GLenum errCode;
 	const GLubyte *errString;
@@ -118,6 +119,7 @@ bool checkGLErrors()
 		return false;
 	}
 	#endif
+#endif
 
 	return true;
 }

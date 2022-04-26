@@ -88,8 +88,8 @@ set( ALL_FILES ${ALL_FILES} ${MAIN} )
 set( Framework
     src/game.cpp
     src/game.h
-    src/framework.cpp
-    src/framework.h
+    src/math.cpp
+    src/math.h
     src/utils.cpp
     src/utils.h
     src/image.cpp

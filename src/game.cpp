@@ -17,6 +17,7 @@ Game::Game(int window_width, int window_height, SDL_Window* window)
 	this->window_width = window_width;
 	this->window_height = window_height;
 	this->window = window;
+	this->renderer = NULL;
 	instance = this;
 	must_exit = false;
 
@@ -130,7 +131,9 @@ void Game::onMouseWheel(SDL_MouseWheelEvent event)
 void Game::onResize(int width, int height)
 {
     std::cout << "window resized: " << width << "," << height << std::endl;
-	glViewport( 0,0, width, height );
+	#ifdef USE_OPENGL
+		glViewport( 0,0, width, height );
+	#endif
 	window_width = width;
 	window_height = height;
 }
@@ -138,6 +141,17 @@ void Game::onResize(int width, int height)
 //sends the image to the framebuffer of the GPU
 void Game::showFramebuffer(Image* img)
 {
+	float startx = -1.0; float starty = -1.0;
+	float width = 2.0; float height = 2.0;
+
+	//center in window
+	float real_aspect = window_width / (float)window_height;
+	float desired_aspect = img->width / (float)img->height;
+	float diff = desired_aspect / real_aspect;
+	width *= diff;
+	startx = -diff;
+
+#ifdef USE_OPENGL
 	static GLuint texture_id = -1;
 	static GLuint shader_id = -1;
 	if (!texture_id)
@@ -150,25 +164,32 @@ void Game::showFramebuffer(Image* img)
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
 	glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 	glTexImage2D(GL_TEXTURE_2D, 0, 4, img->width, img->height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img->pixels);
-
 	glDisable(GL_CULL_FACE); glDisable(GL_DEPTH_TEST); glEnable(GL_TEXTURE_2D);
-	float startx = -1.0; float starty = -1.0;
-	float width = 2.0; float height = 2.0;
-
-	//center in window
-	float real_aspect = window_width / (float)window_height;
-	float desired_aspect = img->width / (float)img->height;
-	float diff = desired_aspect / real_aspect;
-	width *= diff;
-	startx = -diff;
-
 	glBegin(GL_QUADS);
 	glTexCoord2f(0.0, 0.0); glVertex2f(startx, starty + height);
 	glTexCoord2f(1.0, 0.0); glVertex2f(startx + width, starty + height);
 	glTexCoord2f(1.0, 1.0); glVertex2f(startx + width, starty);
 	glTexCoord2f(0.0, 1.0); glVertex2f(startx, starty);
 	glEnd();
+#else
+	static SDL_Texture* texture = NULL;
+	static int tex_width = 0;
+	static int tex_height = 0;
+	if (!texture || tex_width != img->width || tex_height != img->height)
+	{
+		if(texture)
+			SDL_DestroyTexture(texture);
+		texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_BGR888, SDL_TEXTUREACCESS_TARGET, img->width, img->height);
+		tex_width = img->width;
+		tex_height = img->height;
+	}
 
+	//SDL_RenderClear(renderer);
+	SDL_Rect rect = { 0,0,img->width,img->height };
+	SDL_UpdateTexture(texture, &rect, img->pixels, img->width*4);
+	SDL_RenderCopy(renderer, texture, NULL, NULL);
+
+#endif
 	/* this version resizes the image which is slower
 	Image resized = *img;
 	//resized.quantize(1); //change this line to have a more retro look

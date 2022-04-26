@@ -3,7 +3,7 @@
 
 #include "includes.h"
 #include "utils.h"
-#include "framework.h"
+#include "math.h"
 
 //mapped as in SDL
 enum Gamepad

@@ -9,7 +9,7 @@
 
 #include "includes.h"
 
-#include "framework.h"
+#include "math.h"
 #include "utils.h"
 #include "input.h"
 #include "game.h"
@@ -32,6 +32,8 @@ SDL_Window* createWindow(const char* caption, int width, int height, bool fullsc
 	//prepare SDL
 	SDL_Init(SDL_INIT_EVERYTHING);
 
+	#ifdef USE_OPENGL
+
 	//set attributes
 	SDL_GL_SetAttribute(SDL_GL_RED_SIZE, 8);
 	SDL_GL_SetAttribute(SDL_GL_GREEN_SIZE, 8);
@@ -43,6 +45,8 @@ SDL_Window* createWindow(const char* caption, int width, int height, bool fullsc
 	//antialiasing (disable this lines if it goes too slow)
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 1);
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, multisample ); //increase to have smoother polygons
+	#else
+	#endif
 
 	// Initialize the joystick subsystem
 	SDL_InitSubSystem(SDL_INIT_JOYSTICK);
@@ -57,9 +61,10 @@ SDL_Window* createWindow(const char* caption, int width, int height, bool fullsc
 		exit(-1);
 	}
   
+#ifdef USE_OPENGL
 	// Create an OpenGL context associated with the window.
 	SDL_GLContext glcontext = SDL_GL_CreateContext(window);
-
+#endif
 	//in case of exit, call SDL_Quit()
 	atexit(SDL_Quit);
 
@@ -67,9 +72,11 @@ SDL_Window* createWindow(const char* caption, int width, int height, bool fullsc
 	SDL_PumpEvents(); //without this line asserts could fail on windows
 
 	//launch glew to extract the opengl extensions functions from the DLL
+#ifdef USE_OPENGL
 	#ifdef USE_GLEW
 		glewInit();
 	#endif
+#endif
 
 	int window_width, window_height;
 	SDL_GetWindowSize(window, &window_width, &window_height);
@@ -93,14 +100,28 @@ void mainLoop()
 	long now = start_time;
 	long frames_this_second = 0;
 
+#ifndef USE_OPENGL
+	SDL_Renderer* renderer = SDL_CreateRenderer(game->window, -1, SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+	if (renderer == nullptr) {
+		std::cerr << "SDL CreateRenderer error" << std::endl;
+		SDL_DestroyWindow(game->window);
+		return;
+	}
+	game->renderer = renderer;
+#endif
+
 	while (!game->must_exit)
 	{
 		Input::update();
 
 		//render frame
-		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+	#ifdef USE_OPENGL
 		game->render();
 		SDL_GL_SwapWindow(game->window);
+	#else
+		game->render();
+		SDL_RenderPresent(renderer);
+	#endif
 
 		//update events
 		while(SDL_PollEvent(&sdlEvent))
@@ -153,7 +174,7 @@ void mainLoop()
 		double elapsed_time = (now - last_time) * 0.001; //0.001 converts from milliseconds to seconds
 		double last_time_seconds = game->time;
         game->time = float(now * 0.001);
-		game->elapsed_time = elapsed_time;
+		game->elapsed_time = (float)elapsed_time;
 		game->frame++;
 		frames_this_second++;
 		if (int(last_time_seconds *2) != int(game->time*2)) //next half second
@@ -174,6 +195,10 @@ void mainLoop()
 		#endif
 	}
 
+#ifndef USE_OPENGL
+	//SDL_DestroyTexture(texture);
+	SDL_DestroyRenderer(renderer);
+#endif
 	return;
 }
 

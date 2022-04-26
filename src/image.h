@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <map>
-#include "framework.h"
+#include "math.h"
 
 //remove unsafe warnings
 #define _CRT_SECURE_NO_WARNINGS
@@ -50,15 +50,15 @@ public:
 	Color& getPixelRef(unsigned int x, unsigned int y)	{ return pixels[ y * width + x ]; }
 	const Color& getPixelRef(unsigned int x, unsigned int y) const { return pixels[y * width + x]; }
 	Color getPixelSafe(unsigned int x, unsigned int y) const {
-		x = clamp((unsigned int)x, 0, width-1); 
-		y = clamp((unsigned int)y, 0, height-1); 
+		x = clampInt((unsigned int)x, 0, width-1); 
+		y = clampInt((unsigned int)y, 0, height-1);
 		return pixels[ y * width + x ]; 
 	}
 	Color getPixelRepeat(int x, int y) const { x %= width; y %= height; if (x < 0) x = width + x; if (y < 0) y = height + y; return pixels[y * width + x]; }
 
 	//set the pixel at position x,y with value C
 	inline void setPixel(unsigned int x, unsigned int y, const Color& c) const { pixels[y * width + x] = c; }
-	inline void setPixelSafe(int x, int y, const Color& c) const { if (x < 0 || y < 0 || x >= width || y >= height) return; setPixel(x, y, c); }
+	inline void setPixelSafe(int x, int y, const Color& c) const { if (x < 0 || y < 0 || x >= (int)width || y >= (int)height) return; setPixel(x, y, c); }
 	inline void blendPixel(unsigned int x, unsigned int y, const Color& c) const { Color& d = pixels[y * width + x]; d = blendColors(c, d); } //using the alpha to blend colors
 
 	void resize(unsigned int width, unsigned int height); //resizes the canvas but keeping the data in the corner
@@ -71,7 +71,7 @@ public:
 	void drawImage(const Image& img, int x, int y, int w, int h); //draws an image but with different dimensions
 	void drawImage(const Image& img, int x, int y, int imgx, int imgy, int imgw, int imgh); //draws only a part of the image
 	void drawImage(const Image& img, int sx, int sy, int sw, int sh, int dx, int dy, int dw, int dh); //draws only a part of the image
-	void drawImage(const Image& img, int x, int y, Area rect) { drawImage(img, x, y, rect.x, rect.y, rect.w, rect.h); }//draws only a part of the image
+	void drawImage(const Image& img, int x, int y, Area rect) { drawImage(img, x, y, (int)rect.x, (int)rect.y, (int)rect.w, (int)rect.h); }//draws only a part of the image
 	void drawLine( int x0, int y0, int x1, int y1, const Color& c);
 	void drawText( std::string text, int x, int y, const Image& bitmapfont, int font_w = 7, int font_h = 9, int first_char = 32);
 	void drawRectangle(int x, int y, int w, int h, const Color& c);
@@ -101,8 +101,8 @@ public:
 
 inline Image operator * (const Image& a, const Image& b) {
 	Image c(a.width, a.height);
-	for (int x = 0; x < c.width; ++x)
-		for (int y = 0; y < c.height; ++y)
+	for (int x = 0; x < (int)c.width; ++x)
+		for (int y = 0; y < (int)c.height; ++y)
 			c.setPixel(x, y, a.getPixelRef(x, y) * b.getPixelRef(x, y));
 	return c;
 }

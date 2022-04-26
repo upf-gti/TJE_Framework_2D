@@ -19,16 +19,18 @@
 #pragma comment(lib, "SDL2.lib")
 #pragma comment(lib, "SDL2main.lib")
 #include <SDL2/SDL.h>
-#include <SDL2/SDL_opengl.h>
 
+#ifdef USE_OPENGL
+	#include <SDL2/SDL_opengl.h>
 
-//GLUT
-#ifdef WIN32
-	#include <GL/glut.h>
-#endif
+	//GLUT
+	#ifdef WIN32
+		#include <GL/glut.h>
+	#endif
 
-#ifdef __APPLE__
-	#include <GLUT/glut.h>
+	#ifdef __APPLE__
+		#include <GLUT/glut.h>
+	#endif
 #endif
 
 #include <iostream>
@@ -39,9 +41,12 @@
 //OpenGL
 //#include <GL/glu.h> //including GLUT we include everything (opengl, glu and glut)
 
+
 //used to access opengl extensions
 //void* getGLProcAddress(const char*);
-#define REGISTER_GLEXT(RET, FUNCNAME, ...) typedef RET (APIENTRY * FUNCNAME ## _func)(__VA_ARGS__); FUNCNAME ## _func FUNCNAME = NULL; 
-#define IMPORT_GLEXT(FUNCNAME) FUNCNAME = (FUNCNAME ## _func) SDL_GL_GetProcAddress(#FUNCNAME); if (FUNCNAME == NULL) { std::cout << "ERROR: This Graphics card doesnt support " << #FUNCNAME << std::endl; }
+#ifdef USE_OPENGL
+	#define REGISTER_GLEXT(RET, FUNCNAME, ...) typedef RET (APIENTRY * FUNCNAME ## _func)(__VA_ARGS__); FUNCNAME ## _func FUNCNAME = NULL; 
+	#define IMPORT_GLEXT(FUNCNAME) FUNCNAME = (FUNCNAME ## _func) SDL_GL_GetProcAddress(#FUNCNAME); if (FUNCNAME == NULL) { std::cout << "ERROR: This Graphics card doesnt support " << #FUNCNAME << std::endl; }
+#endif
 
 #endif

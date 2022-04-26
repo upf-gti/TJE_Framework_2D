@@ -17,6 +17,7 @@ public:
 
 	//window
 	SDL_Window* window;
+	SDL_Renderer* renderer;
 	int window_width;
 	int window_height;
 

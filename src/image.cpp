@@ -164,11 +164,11 @@ void Image::drawImage(const Image& img, int sx, int sy, int sw, int sh, int dx, 
 		{
 			int px = i*deltax + sx;
 			int py = j*deltay + sy;
-			if (px < 0 || py < 0 || px >= img.width || py >= img.height)
+			if (px < 0 || py < 0 || px >= (int)img.width || py >= (int)img.height)
 				continue;
 			int px2 = i + dx;
 			int py2 = j + dy;
-			if (px2 < 0 || py2 < 0 || px2 >= width || py2 >= height)
+			if (px2 < 0 || py2 < 0 || px2 >= (int)width || py2 >= (int)height)
 				continue;
 			const Color &c = img.getPixel(px,py);
 			if (c.a == 0)
@@ -201,7 +201,7 @@ void Image::drawLine(int x0, int y0, int x1, int y1, const Color& c)
 
 void Image::drawText(std::string text, int x, int y, const Image& bitmapfont, int font_w, int font_h, int first_char )
 {
-	for (int i = 0; i < text.size(); ++i)
+	for (int i = 0; i < (int)text.size(); ++i)
 	{
 		drawImage( bitmapfont, x, y, bitmapfont.getArea(text[i] - first_char, font_w, font_h));
 		x += font_w;
