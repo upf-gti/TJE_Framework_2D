@@ -194,7 +194,7 @@ void Vector3::parseFromText(const char* text, const char separator)
 			strncpy(num, start, current - start);
 			num[current - start] = '\0';
 			start = current + 1;
-			if (num[0] != 'x') //¿?
+			if (num[0] != 'x') //?
 				switch(pos)
 				{
 					case 0: x = (float)atof(num); break;
@@ -291,7 +291,7 @@ void Matrix44::transpose()
 
 Vector3 Matrix44::rotateVector(const Vector3& v)
 {
-	return (*this * Vector4(v,0.0)).xyz;
+	return (*this * Vector4(v,0.0)).sV4Data.xyz;
 }
 
 void Matrix44::translateGlobal(float x, float y, float z)
@@ -1290,7 +1290,7 @@ Vector3 RayPlaneCollision(const Vector3& plane_pos, const Vector3& plane_normal,
 
 int planeBoxOverlap( const Vector4& plane, const Vector3& center, const Vector3& halfsize )
 {
-	Vector3 n = plane.xyz;
+	Vector3 n = plane.sV4Data.xyz;
 	float d = plane.w;
 	float radius = abs(halfsize.x * n[0]) + abs(halfsize.y * n[1]) + abs(halfsize.z * n[2]);
 	float distance = dot(n, center) + d;
@@ -1310,7 +1310,7 @@ float computeAngleDiff( float a, float b )
 
 float signedDistanceToPlane( const Vector4& plane, const Vector3& point )
 {
-	return dot(plane.xyz, point) + plane.w;
+	return dot(plane.sV4Data.xyz, point) + plane.w;
 }
 
 const Vector3 corners[] = { {1,1,1},  {1,1,-1},  {1,-1,1},  {1,-1,-1},  {-1,1,1},  {-1,1,-1},  {-1,-1,1},  {-1,-1,-1} };
