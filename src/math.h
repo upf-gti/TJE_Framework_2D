@@ -159,11 +159,11 @@ public:
 	{
 		struct { float x,y,z; };
 		float v[3];
-		struct { Vector2 xy; } sV3Data;
+		struct { Vector2 xy; float _z; } sV3Data;
 	};
 
-	Vector3() : xy() { x = y = z = 0.0f; }
-	Vector3(float x, float y, float z) : xy() { this->x = x; this->y = y; this->z = z;	}
+	Vector3() { x = y = z = 0.0f; }
+	Vector3(float x, float y, float z) { this->x = x; this->y = y; this->z = z;	}
 
 	double length();
 	double length() const;
@@ -215,7 +215,7 @@ public:
 	{
 		struct { float x,y,z,w; };
 		float v[4];
-		struct { Vector3 xyz; float _w;  };
+		struct { Vector3 xyz; float _w; } sV4Data;
 	};
 
 	Vector4() { x = y = z = w = 0.0; }
