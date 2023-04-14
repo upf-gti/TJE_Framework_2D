@@ -159,6 +159,7 @@ public:
 	{
 		struct { float x,y,z; };
 		float v[3];
+		struct { Vector2 xy; } sV3Data;
 	};
 
 	Vector3() : xy() { x = y = z = 0.0f; }
