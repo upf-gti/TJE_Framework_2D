@@ -12,16 +12,13 @@
 //returns time in milliseconds
 long getTime()
 {
-	return (long)SDL_GetTicks();
-	/*
-	#ifdef WIN32
-		return GetTickCount();
-	#else
-		struct timeval tv;
-		gettimeofday(&tv,NULL);
-		return (int)(tv.tv_sec*1000 + (tv.tv_usec / 1000));
-	#endif
-	*/
+#ifdef WIN32
+	return GetTickCount();
+#else
+	struct timeval tv;
+	gettimeofday(&tv, NULL);
+	return (int)(tv.tv_sec * 1000 + (tv.tv_usec / 1000));
+#endif
 }
 
 long getPrecisionTime()
@@ -50,30 +47,13 @@ void* getGLProcAddress(const char* name)
 
 std::string getPath()
 {
-    std::string fullpath;
-    // ----------------------------------------------------------------------------
-    // This makes relative paths work in C++ in Xcode by changing directory to the Resources folder inside the .app bundle
-#ifdef __APPLE__
-    CFBundleRef mainBundle = CFBundleGetMainBundle();
-    CFURLRef resourcesURL = CFBundleCopyResourcesDirectoryURL(mainBundle);
-    char path[PATH_MAX];
-    if (!CFURLGetFileSystemRepresentation(resourcesURL, TRUE, (UInt8 *)path, PATH_MAX))
-    {
-        // error!
-    }
-    CFRelease(resourcesURL);
-    chdir(path);
-    fullpath = path;
-#else
-	 char cCurrentPath[1024];
-	 if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath)))
-		 return "";
+	char cCurrentPath[1024];
+	if (!GetCurrentDir(cCurrentPath, sizeof(cCurrentPath))) {
+		return "";
+	}
 
 	cCurrentPath[sizeof(cCurrentPath) - 1] = '\0';
-	fullpath = cCurrentPath;
-
-#endif    
-    return fullpath;
+	return cCurrentPath;
 }
 
 std::string toString(float v) { std::ostringstream ss; ss << v; return std::string(ss.str()); }

@@ -185,7 +185,7 @@ void Game::showFramebuffer(Image* img)
 	}
 
 	//SDL_RenderClear(renderer);
-	SDL_Rect rect = { 0,0,img->width,img->height };
+	SDL_Rect rect = { 0, 0, (int)img->width, (int)img->height };
 	SDL_UpdateTexture(texture, &rect, img->pixels, img->width*4);
 	SDL_RenderCopy(renderer, texture, NULL, NULL);
 
