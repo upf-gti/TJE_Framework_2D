@@ -1,171 +1,119 @@
-cmake_minimum_required( VERSION 3.2 )
+cmake_minimum_required(VERSION 3.12)
 
-project( ComputerGraphics )
+function(COPY_FROM_TO_DIR src_dir dst_dir)
+    file(GLOB src_files ${src_dir}/*)
+    foreach(src_file IN LISTS src_files)
+        get_filename_component(file_and_ext ${src_file} NAME)
+        set(dst_file ${dst_dir}/${file_and_ext})
+#        MESSAGE(STATUS "[[[COPY_FROM_TO_DIR]]] :\n   * ${src_file}\n   * ${dst_file}")
+#        add_custom_command(COMMAND ${CMAKE_COMMAND} -E make_directory ${dst_dir} OUTPUT ${dst_dir})
+        add_custom_command(
+            TARGET ${PROJECT_NAME} PRE_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy ${src_file} ${dst_file}
+        )
+    endforeach()
+endfunction()
 
-if( ${CMAKE_CXX_COMPILER_ID} MATCHES "Clang" )
-    message( STATUS "Found Clang" )
-    # no built in variable for Clang so make one
-    set (CMAKE_COMPILER_IS_CLANG TRUE)
+# Macro to map filters to folder structure for MSVC projects
+macro(GroupSources curdir)
+    if(MSVC)
+		file(GLOB children RELATIVE ${PROJECT_SOURCE_DIR}/${curdir} ${PROJECT_SOURCE_DIR}/${curdir}/*)
 
-    if( "${CMAKE_CXX_COMPILER_ID}" MATCHES "AppleClang" )
-        message( STATUS "Compiler: Apple Clang" )
-        # no built in variable for Apple Clang so make one
-        set (CMAKE_COMPILER_IS_APPLE_CLANG TRUE)
-    endif()
-endif()
-
-if( CMAKE_COMPILER_IS_GNUCXX OR CMAKE_COMPILER_IS_CLANG )
-    set( CMAKE_COMPILER_IS_GNUCXX_LIKE TRUE )
-endif()
-
-# determine bitness
-set( IS_64_BIT FALSE )
-
-if( CMAKE_SIZEOF_VOID_P EQUAL 8 )
-    set( IS_64_BIT TRUE )
-endif( CMAKE_SIZEOF_VOID_P EQUAL 8 )
-
-# determine processor architecture directory
-if( WIN32 )
-    # directory names for 32 and 64 bit
-    if( IS_64_BIT )
-        set( ARCH "x64" )
-        message(FATAL_ERROR "Windows only suports 32 bit version of the project, run again cmake and select 32 bit platform.")
-    else()
-        set( ARCH "x86" )
-    endif()
-else()
-    # on non windows systems use processor as architecture
-    set( ARCH ${CMAKE_SYSTEM_PROCESSOR} )
-endif()
-
-message( STATUS "Using architecture ${ARCH}" )
-
-# determine compiler directory
-if( MSVC )
-    set ( COMPILER "vc14" )
-elseif(APPLE)
-    set ( COMPILER "xcode" )
-else()
-    set ( COMPILER "gnu" )
-endif()
-
-message( STATUS "Using Compiler IDE: ${COMPILER}" )
-
-# determine platform directory
-if( MSVC )
-  set ( PLATFORM "windows" )
-elseif(APPLE)
-    set ( PLATFORM "Apple" )
-else()
-  set ( PLATFORM "linux" )
-endif()
-
-message( STATUS "Using platform ${PLATFORM}" )
-
-
-if( MSVC )
-    message( STATUS "Adding freeglut includes ..." )
-
-    include_directories( ${CMAKE_CURRENT_SOURCE_DIR}/visual/libs/include )
-    set( LIB_DIR ${CMAKE_CURRENT_SOURCE_DIR}/visual/libs/lib )
-
-    message ( STATUS "Visual Studio compiler" )
-    set( CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /D _CRT_SECURE_NO_WARNINGS" )
-endif()
-
-set(CMAKE_CXX_STANDARD 11)
-
-set( ALL_FILES )
-
-set( MAIN
-    src/includes.h
-    src/main.cpp
-)
-source_group( "main" FILES ${MAIN} )
-set( ALL_FILES ${ALL_FILES} ${MAIN} )
-
-set( Framework
-    src/game.cpp
-    src/game.h
-    src/math.cpp
-    src/math.h
-    src/utils.cpp
-    src/utils.h
-    src/image.cpp
-    src/image.h
-    src/input.cpp
-    src/input.h
-    src/synth.cpp
-    src/synth.h
-)
-source_group( "framework" FILES ${Framework} )
-set( ALL_FILES ${ALL_FILES} ${Framework} )
-
-include_directories( src )
-
-set( ProjectName "TJE")
-set( CMAKE_RUNTIME_OUTPUT_DIRECTORY ".")
-
-message( STATUS "Creating TJE project." )
-add_executable( ${ProjectName} ${ALL_FILES} )
-
-if( MSVC )
-    target_link_libraries( ${ProjectName} opengl32 )
-    target_link_libraries( ${ProjectName} glu32 )
-    target_link_libraries( ${ProjectName} ${LIB_DIR}/glut32.lib )
-    target_link_libraries( ${ProjectName} ${LIB_DIR}/glew32.lib )
-    target_link_libraries( ${ProjectName} ${LIB_DIR}/SDL2.lib )
-    target_link_libraries( ${ProjectName} ${LIB_DIR}/SDL2main.lib )
-elseif( CMAKE_COMPILER_IS_GNUCXX_LIKE )
-    find_package(OpenGL 3.2 REQUIRED)
-
-    include_directories(${OPENGL_INCLUDE_DIR})
-    target_link_libraries(${ProjectName} ${OPENGL_LIBRARIES})
-
-    message(STATUS "OPENGL_INCLUDE_DIR: ${OPENGL_INCLUDE_DIR}")
-    message(STATUS "OPENGL_LIBRARIES: ${OPENGL_LIBRARIES}")
-
-    find_package(GLUT REQUIRED)
-
-    include_directories(${GLUT_INCLUDE_DIR})
-    target_link_libraries(${ProjectName} ${GLUT_LIBRARY})
-
-    message(STATUS "GLUT_INCLUDE_DIR: ${GLUT_INCLUDE_DIR}")
-    message(STATUS "GLUT_LIBRARY: ${GLUT_LIBRARY}")
-
-    if(APPLE)
-        set(SDL2_INCLUDE_DIRS "/opt/local/include")
-        set(SDL2_LIBRARIES "/opt/local/lib/libSDL2.dylib")
-
-        if(EXISTS "${SDL2_LIBRARIES}")
-            message(STATUS "SDL installed using mac ports")
-        else()
-            set(SDL2_INCLUDE_DIRS "/usr/local/include")
-            set(SDL2_LIBRARIES "/usr/local/lib/libSDL2.dylib")
-
-            if(NOT EXISTS "${SDL2_LIBRARIES}")
-                message(FATAL_ERROR "You must install sdl libraries using homebrew or mac ports.")
+        foreach(child ${children})
+            if(IS_DIRECTORY ${PROJECT_SOURCE_DIR}/${curdir}/${child})
+                GroupSources(${curdir}/${child})
+            else()
+                string(REPLACE "/" "\\" groupname ${curdir})
+                source_group(${groupname} FILES ${PROJECT_SOURCE_DIR}/${curdir}/${child})
             endif()
-
-            message(STATUS "SDL installed using homebrew")
-		endif()			
-    else()
-        find_package(GLEW REQUIRED)
-
-        include_directories(${GLEW_INCLUDE_DIR})
-        target_link_libraries(${ProjectName} ${GLEW_LIBRARY})
-
-        message(STATUS "GLEW_INCLUDE_DIR: ${GLEW_INCLUDE_DIR}")
-        message(STATUS "GLEW_LIBRARY: ${GLEW_LIBRARY}")
-
-        include(FindPkgConfig)
-        PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
+        endforeach()
     endif()
+endmacro()
 
-    include_directories(${SDL2_INCLUDE_DIRS})
-    target_link_libraries(${ProjectName} ${SDL2_LIBRARIES})
+# Directories
+set(DIR_ROOT       ${CMAKE_CURRENT_LIST_DIR})
+set(DIR_SOURCES    "${DIR_ROOT}/src")
 
-    message(STATUS "SDL2_INCLUDE_DIRS: ${SDL2_INCLUDE_DIRS}")
-    message(STATUS "SDL2_LIBRARY: ${SDL2_LIBRARIES}")
+set(CMAKE_OSX_ARCHITECTURES "arm64;x86_64")
+
+project (TJE_Framework_2D CXX)
+
+find_package(OpenGL REQUIRED)
+
+if(NOT TARGET OpenGL::GLU)
+    message(FATAL_ERROR "GLU could not be found")
+endif(NOT TARGET OpenGL::GLU)
+
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
+
+add_subdirectory(libraries/sdl2 EXCLUDE_FROM_ALL)
+add_subdirectory(libraries/glew-cmake EXCLUDE_FROM_ALL)
+
+# Sources
+macro(CG_FILES_APPEND)
+    file(GLOB FILES_APPEND CONFIGURE_DEPENDS ${ARGV})
+    list(APPEND CG_SOURCES ${FILES_APPEND})
+endmacro()
+macro(CG_SOURCES_APPEND)
+    CG_FILES_APPEND(${ARGV0}/*.h)
+    CG_FILES_APPEND(${ARGV0}/*.cpp)
+endmacro()
+
+CG_SOURCES_APPEND(${DIR_SOURCES})
+
+add_executable(${PROJECT_NAME} ${CG_SOURCES})
+
+target_include_directories(${PROJECT_NAME} PUBLIC ${DIR_SOURCES})
+
+set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY VS_STARTUP_PROJECT ${PROJECT_NAME})
+
+set_property(TARGET ${PROJECT_NAME} PROPERTY VS_DEBUGGER_WORKING_DIRECTORY "${DIR_ROOT}")
+set_target_properties(${PROJECT_NAME} PROPERTIES 
+                      XCODE_GENERATE_SCHEME TRUE
+                      XCODE_SCHEME_WORKING_DIRECTORY "${DIR_ROOT}/")
+
+GroupSources(src)
+
+# Ensure that _AMD64_ or _X86_ are defined on Microsoft Windows, as otherwise
+# um/winnt.h provided since Windows 10.0.22000 will error.
+if (WIN32)
+    if(CMAKE_SIZEOF_VOID_P EQUAL 8)
+        add_definitions(-D_AMD64_)
+        message(STATUS "64 bits detected")
+    elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
+        add_definitions(-D_X86_)
+        message(STATUS "32 bits detected")
+    endif()
 endif()
+
+if (APPLE)
+    find_library(cocoa_lib Cocoa REQUIRED)
+    target_link_libraries(${PROJECT_NAME} PRIVATE ${cocoa_lib})
+endif()
+
+# sdl2
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2)
+target_link_libraries(${PROJECT_NAME} PRIVATE SDL2main)
+include_directories(${PROJECT_NAME} libraries/sdl2/include)
+set_property(TARGET SDL2 PROPERTY FOLDER "External/SDL2")
+set_property(TARGET SDL2main PROPERTY FOLDER "External/SDL2")
+set_property(TARGET sdl_headers_copy PROPERTY FOLDER "External/SDL2")
+
+# glew
+add_definitions(-DGLEW_STATIC)
+target_link_libraries(${PROJECT_NAME} PRIVATE libglew_static)
+set_property(TARGET libglew_static PROPERTY FOLDER "External/libglew_static")
+
+#opengl
+target_link_libraries(${PROJECT_NAME} PRIVATE OpenGL::GL OpenGL::GLU)
+
+# Properties
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD 20)
+set_target_properties(${PROJECT_NAME} PROPERTIES CXX_STANDARD_REQUIRED ON)
+
+message(STATUS "dir root: ${DIR_ROOT}")
+message(STATUS "bin root: ${CMAKE_BINARY_DIR}")

@@ -10,7 +10,7 @@
 #include <vector>
 
 #include "includes.h"
-#include "math.h"
+#include "framework.h"
 
 class Shader;
 class Texture;

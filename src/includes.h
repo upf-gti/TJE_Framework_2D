@@ -3,50 +3,42 @@
 	It is a little bit low level so do not worry about the code.
 */
 
-#ifndef INCLUDES_H
-#define INCLUDES_H
+#pragma once
 
 //under windows we need this file to make opengl work
-#ifdef WIN32 
+#ifdef WIN32
+	#define NOMINMAX
 	#include <windows.h>
 #endif
 
-//remove warnings about unsafe functions
-#define _CRT_SECURE_NO_WARNINGS
-#pragma warning(disable:4996)
+#ifndef APIENTRY
+	#define APIENTRY
+#endif
 
-//SDL
-#pragma comment(lib, "SDL2.lib")
-#pragma comment(lib, "SDL2main.lib")
+#ifdef WIN32
+	#define USE_GLEW
+	#include <GL/glew.h>
+#endif
+
+#define GL_GLEXT_PROTOTYPES
+
 #include <SDL2/SDL.h>
+#include <SDL2/SDL_opengl.h>
 
-#ifdef USE_OPENGL
-	#include <SDL2/SDL_opengl.h>
+//GLUT
+#ifdef WIN32
+	//#include <GL/glext.h>
+#include "GL/GLU.h"
+#endif
 
-	//GLUT
-	#ifdef WIN32
-		#include <GL/glut.h>
-	#endif
-
-	#ifdef __APPLE__
-		#include <GLUT/glut.h>
-	#endif
+#ifdef __APPLE__
+#include "OpenGL/glu.h"
 #endif
 
 #include <iostream>
 #include <cmath>
 #include <string>
-#include <iostream>
-
-//OpenGL
-//#include <GL/glu.h> //including GLUT we include everything (opengl, glu and glut)
-
 
 //used to access opengl extensions
-//void* getGLProcAddress(const char*);
-#ifdef USE_OPENGL
-	#define REGISTER_GLEXT(RET, FUNCNAME, ...) typedef RET (APIENTRY * FUNCNAME ## _func)(__VA_ARGS__); FUNCNAME ## _func FUNCNAME = NULL; 
-	#define IMPORT_GLEXT(FUNCNAME) FUNCNAME = (FUNCNAME ## _func) SDL_GL_GetProcAddress(#FUNCNAME); if (FUNCNAME == NULL) { std::cout << "ERROR: This Graphics card doesnt support " << #FUNCNAME << std::endl; }
-#endif
-
-#endif
+#define REGISTER_GLEXT(RET, FUNCNAME, ...) typedef RET ( * FUNCNAME ## _func)(__VA_ARGS__); FUNCNAME ## _func FUNCNAME = NULL; 
+#define IMPORT_GLEXT(FUNCNAME) FUNCNAME = (FUNCNAME ## _func) SDL_GL_GetProcAddress(#FUNCNAME); if (FUNCNAME == NULL) { std::cout << "ERROR: This Graphics card doesnt support " << #FUNCNAME << std::endl; }

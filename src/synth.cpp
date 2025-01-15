@@ -1,5 +1,5 @@
 #include "synth.h"
-#include "math.h"
+#include "framework.h"
 #include <math.h>
 
 Synth::Sample::~Sample()

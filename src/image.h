@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <iostream>
 #include <map>
-#include "math.h"
+#include "framework.h"
 
 //remove unsafe warnings
 #define _CRT_SECURE_NO_WARNINGS
