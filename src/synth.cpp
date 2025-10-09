@@ -232,20 +232,24 @@ bool Synth::updateSamplesBuffer(SDL_AudioSpec& spec)
 		if (!sp.in_use)
 			continue;
 
-		unsigned int size = AUDIO_BUFFER_LENGTH;
-		unsigned int offset = sp.offset;
-		if (sp.offset + size > sp.sample->length)
+		unsigned int remaining = sp.sample->length - sp.offset;
+		unsigned int size = (remaining < AUDIO_BUFFER_LENGTH) ? remaining : AUDIO_BUFFER_LENGTH;
+
+		for (unsigned int i = 0; i < size; ++i)
 		{
-			size = sp.sample->length - sp.offset;
+			samples_buffer[i] += sp.sample->buffer[sp.offset + i] * sp.volume;
+		}
+
+		sp.offset += size;
+
+		if (sp.offset >= sp.sample->length)
+		{
 			if (sp.loop)
 				sp.offset = 0;
 			else
 				sp.in_use = false;
 		}
-		else
-			sp.offset += size;
-
-		SDL_MixAudio((Uint8*)samples_buffer, (Uint8*)(sp.sample->buffer + offset), size * sizeof(float), (int)(sp.volume * 128) );
 	}
+
 	return true;
 }

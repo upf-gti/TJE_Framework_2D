@@ -230,11 +230,12 @@ void Game::enableAudio()
 	audio_spec.channels = 1;
 	audio_spec.samples = 1024;
 	audio_spec.callback = AudioCallback; /* you wrote this function elsewhere. */
-	if (SDL_OpenAudio(&audio_spec, &audio_spec) < 0) {
+	SDL_AudioDeviceID audio_device = SDL_OpenAudioDevice(nullptr, 0, &audio_spec, nullptr, 0);
+	if (!audio_device) {
 		fprintf(stderr, "Couldn't open audio: %s\n", SDL_GetError());
 		exit(-1);
 	}
-	SDL_PauseAudio(0);
+	SDL_PauseAudioDevice(audio_device, 0);
 }
 
 void Game::onAudio(float *buffer, unsigned int len, double time, SDL_AudioSpec& audio_spec)
