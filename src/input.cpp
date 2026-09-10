@@ -1,4 +1,5 @@
 #include "input.h"
+#include <string.h>
 
 const Uint8* Input::keystate = NULL; //use SDL_SCANCODE_xxx
 Uint8 Input::prev_keystate[SDL_NUM_SCANCODES]; //previous before

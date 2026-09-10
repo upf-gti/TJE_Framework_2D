@@ -1,6 +1,7 @@
 #include "synth.h"
 #include "framework.h"
-#include <math.h>
+#include <string.h>
+#include <cmath>
 
 Synth::Sample::~Sample()
 {
