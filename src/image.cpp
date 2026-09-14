@@ -389,7 +389,7 @@ bool Image::loadTGA(const char* filename)
 	if (tgainfo->data == NULL || fread(tgainfo->data, 1, imageSize, file) != imageSize)
 	{
 		if (tgainfo->data != NULL)
-			delete tgainfo->data;
+			delete []tgainfo->data;
 
 		fclose(file);
 		delete tgainfo;
@@ -415,7 +415,7 @@ bool Image::loadTGA(const char* filename)
 			this->setPixel(x, flipY ? height - y - 1 : y, Color(tgainfo->data[pos + 2], tgainfo->data[pos + 1], tgainfo->data[pos], alpha));
 		}
 
-	delete tgainfo->data;
+	delete[]tgainfo->data;
 	delete tgainfo;
 	std::cout << " + Image loaded: " << filename << std::endl;
 
@@ -461,6 +461,8 @@ bool Image::saveTGA(const char* filename)
 
 	fwrite(bytes, 1, width*height * 3, file);
 	fclose(file);
+
+	delete []bytes;
 	return true;
 }
 
